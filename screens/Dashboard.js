@@ -1,13 +1,25 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Alert} from 'react-native';
 import { TouchableOpacity } from 'react-native-gesture-handler';
+import { connect } from 'react-redux';
+import { CommonActions } from '@react-navigation/native';
 
-export default function Dashboard({ navigation }) {
+function Dashboard(props) {
   const [firstName, setFirstName] = useState('');
 
-  const handlePress = () => {
-    navigation.replace('Connexion');
-  };
+  
+  function logout(){
+    const action = { type: "USER_LOGGED_OUT" }
+    props.dispatch(action)
+    props.navigation.dispatch(
+        CommonActions.reset({
+          index: 1,
+          routes: [
+            { name: 'Connexion' },
+          ],
+        })
+    );
+  }
 
   const addStat = () => {
    
@@ -31,13 +43,27 @@ export default function Dashboard({ navigation }) {
 
 
       <View style={{display:"flex", alignItems:"center"}}>
-        <TouchableOpacity style={styles.logout} onPress={handlePress}>
+        <TouchableOpacity style={styles.logout} onPress={logout}>
           <Text style={styles.buttonLogout}>Me déconnecter</Text>
         </TouchableOpacity>
       </View>
     </View>
   )
 }
+
+const mapStateToProps = (state) => {
+	return {
+		data: state.login.data,
+	}
+}
+
+const mapDispatchToProps = (dispatch) => {
+	return {
+		dispatch: (action) => { dispatch(action) }
+	}
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(Dashboard);
 
 const styles = StyleSheet.create({
   container: {

@@ -1,13 +1,17 @@
 const initialState = {
-    data: {},
+    data: {
+        user:{}
+    },
 };
 
 const countReducer = (state = initialState, action) => {
     switch (action.type) {
         case "GET_INFOS_USER":
+            let dataInfos = state.data;
+            dataInfos.user = action.data;
             return {
                 ...state,
-                data: { ...state.data, ...action.data }
+                data: dataInfos
             };
 
         case "EDIT_TOKEN_USER":

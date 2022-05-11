@@ -133,7 +133,9 @@ const styles = StyleSheet.create({
     flex: 1,
     display: "flex",
     justifyContent: "center",
-    alignItems: "center"
+    alignItems: "center",
+    paddingBottom:30
+
   },
   background: {
     position: 'absolute',

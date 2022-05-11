@@ -1,13 +1,21 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, StyleSheet, Alert, Image } from 'react-native';
 import { TouchableOpacity } from 'react-native-gesture-handler';
 import { LinearGradient } from 'expo-linear-gradient';
 import axios from 'axios';
+import { connect } from 'react-redux';
 
-export default function SignIn({navigation}){
+
+function SignIn(props){
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
+  useEffect(() => {
+		// envoie vers la page Accueil si l'utilisateur est déjà connecté ou si il se connecte
+		if(props.data != undefined && Object.keys(props.data.user).length != 0){
+        props.navigation.replace('Dashboard');
+		}
+	});
 
   const handlePress = () => {
     //navigation.navigate('Tableau de bord');
@@ -15,17 +23,23 @@ export default function SignIn({navigation}){
       Alert.alert('Erreur', 'Merci de remplir tous les champs');
     }
     else{
-    axios.post("http://192.168.0.100:8000/api/login_check", {
+    axios.post("http://10.0.10.89:8000/api/login_check", {
 			username: email,
 			password: password
 		})
 			.then((response) => {
-				/*const action = { type: "LOGIN_USER", user: { token: response.data.token } }
+        let user = {
+          "id": response.data.data.id,
+          "username": response.data.data.username,
+          "token": response.data.token
+        };
+				const action = { type: "GET_INFOS_USER", data: user }
 				props.dispatch(action);
-				userInfos(response.data.token, props.dispatch, true, props, false, "login");
-        console.log(response.data);*/
+				//userInfos(response.data.token, props.dispatch, true, props, false, "login");
+        console.log(props.data)
         setEmail('');
         setPassword('');
+        
 			})
 			.catch((error) => {
         console.log(error)
@@ -82,13 +96,27 @@ export default function SignIn({navigation}){
         <Text style={styles.textButton}>Me connecter</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.button} onPress={() => navigation.navigate("S'inscrire")} >
+      <TouchableOpacity style={styles.button} onPress={() => props.navigation.navigate("S'inscrire")} >
         <Text style={styles.noAccount}>Je n'ai pas encore de compte</Text>
        </TouchableOpacity>
-
+       
     </View>
   );
 }
+
+const mapStateToProps = (state) => {
+	return {
+		data: state.login.data,
+	}
+}
+
+const mapDispatchToProps = (dispatch) => {
+	return {
+		dispatch: (action) => { dispatch(action) }
+	}
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(SignIn);
 
 const styles = StyleSheet.create({
   container: {

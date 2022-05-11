@@ -4,11 +4,14 @@ import { createStackNavigator } from '@react-navigation/stack';
 import SignUp from './screens/SignUp';
 import SignIn from './screens/SignIn';
 import Dashboard from './screens/Dashboard';
+import store from "./store/configureStore";
+import { Provider } from 'react-redux';
 
 const Stack = createStackNavigator();
 
 export default function App() {
   return (
+    <Provider store={store.store}>
     <NavigationContainer>
       <Stack.Navigator>
         <Stack.Screen name='Connexion' component={SignIn} options={{ headerShown: false }} />
@@ -19,9 +22,9 @@ export default function App() {
           headerTintColor: '#fff',
           headerShadowVisible: false,
         }} />
-        <Stack.Screen name='Sign In' component={SignIn} options={{ headerShown: false }} />
-        <Stack.Screen name={'Tableau de bord'} component={Dashboard} />
+        <Stack.Screen name={'Dashboard'} component={Dashboard} />
       </Stack.Navigator>
     </NavigationContainer>
+    </Provider>
   );
 }
