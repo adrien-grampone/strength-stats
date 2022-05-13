@@ -5,6 +5,7 @@ import SignUp from './screens/SignUp';
 import SignIn from './screens/SignIn';
 import Dashboard from './screens/Dashboard';
 import store from "./store/configureStore";
+import AddExo from './screens/AddExo';
 import { Provider } from 'react-redux';
 
 const Stack = createStackNavigator();
@@ -23,6 +24,7 @@ export default function App() {
           headerShadowVisible: false,
         }} />
         <Stack.Screen name={'Dashboard'} component={Dashboard} />
+        <Stack.Screen name={'AddExo'} component={AddExo} />
       </Stack.Navigator>
     </NavigationContainer>
     </Provider>

@@ -23,7 +23,9 @@ function SignIn(props){
       Alert.alert('Erreur', 'Merci de remplir tous les champs');
     }
     else{
-    axios.post("http://10.0.10.89:8000/api/login_check", {
+      props.navigation.replace('Dashboard');
+      /*
+    axios.post("http://10.0.10.42:8000/api/login_check", {
 			username: email,
 			password: password
 		})
@@ -49,21 +51,8 @@ function SignIn(props){
 				);
         setEmail('');
         setPassword('');
-			});
+			});*/
     }
-    /*
-    if (!email) {
-      Alert.alert('Merci de saisir ton adresse mail !');
-    }
-
-    if (!password) {
-      Alert.alert('Merci de saisir ton mot de passe !');
-    }
-    signIn(email, password).finally(() => {
-      setEmail('');
-      setPassword('');
-    });
-   */
   };
 
   return (

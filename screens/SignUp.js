@@ -135,7 +135,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     paddingBottom:30
-
   },
   background: {
     position: 'absolute',
