@@ -1,0 +1,15 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-dark text-white;
+  }
+}
+
+:root {
+  --background: #0A0A0A;
+  --foreground: #FFFFFF;
+  --accent: #8B5CF6;
+}
