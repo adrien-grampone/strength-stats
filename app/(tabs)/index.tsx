@@ -8,6 +8,8 @@ import Animated, {
 import { LucideDumbbell, LucidePlay, LucideZap, LucideTrendingUp, LucideChevronRight, LucideUser, LucideActivity, LucidePlus } from 'lucide-react-native';
 import { PressableScale } from '../../components/PressableScale';
 import Svg, { Circle, Defs, LinearGradient as SvgLinearGradient, Stop, RadialGradient } from 'react-native-svg';
+import { supabase } from '../../lib/supabase';
+import { useFocusEffect } from 'expo-router';
 
 const { width, height } = Dimensions.get('window');
 
@@ -80,35 +82,26 @@ function CircularProgress({ progress, size, strokeWidth }: { progress: number, s
 }
 
 // 3. WEEKLY CALENDAR COMPONENT
-function WeeklyCalendar() {
-  const [selectedDay, setSelectedDay] = React.useState(3); // Today is index 3 (Thursday)
+function WeeklyCalendar({ activeDays }: { activeDays: number[] }) {
+  const today = new Date().getDay();
+  const adjustedToday = today === 0 ? 6 : today - 1; // Mon=0, Sun=6
   
-  const days = [
-    { label: 'L', active: true, today: false },
-    { label: 'M', active: false, today: false },
-    { label: 'M', active: true, today: false },
-    { label: 'J', active: false, today: true },
-    { label: 'V', active: false, today: false },
-    { label: 'S', active: false, today: false },
-    { label: 'D', active: false, today: false },
-  ];
+  const days = ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
 
   return (
     <View className="flex-row justify-between w-full px-6 mb-8 mt-2">
       {days.map((day, i) => (
-        <TouchableOpacity 
-          key={i} 
-          onPress={() => setSelectedDay(i)}
-          className="items-center"
-          activeOpacity={0.7}
-        >
-          <Text className={`text-[10px] font-bold mb-2 transition-colors duration-200 ${i === selectedDay ? 'text-white' : 'text-[rgba(255,255,255,0.4)]'}`}>{day.label}</Text>
-          <View className={`w-8 h-8 rounded-full items-center justify-center transition-all duration-200 ${i === selectedDay ? 'border border-[#8B5CF6] bg-[#8B5CF6]/20' : ''}`}>
-             {day.active && i !== selectedDay && <View className="w-1.5 h-1.5 rounded-full bg-[#06B6D4]" />}
-             {i === selectedDay && <View className="w-2 h-2 rounded-full bg-[#8B5CF6] shadow-[0_0_15px_#8B5CF6]" />}
-             {!day.active && i !== selectedDay && <View className="w-1.5 h-1.5 rounded-full bg-[rgba(255,255,255,0.1)]" />}
+        <View key={i} className="items-center">
+          <Text className={`text-[10px] font-bold mb-2 ${i === adjustedToday ? 'text-white' : 'text-[rgba(255,255,255,0.4)]'}`}>{day}</Text>
+          <View className={`w-8 h-8 rounded-full items-center justify-center ${i === adjustedToday ? 'border border-[#8B5CF6] bg-[#8B5CF6]/20' : ''}`}>
+             {activeDays.includes(i) ? (
+               <View key="dot-active" className="w-1.5 h-1.5 rounded-full bg-[#06B6D4] shadow-[0_0_8px_#06B6D4]" />
+             ) : (
+               <View key="dot-inactive" className="w-1.5 h-1.5 rounded-full bg-[rgba(255,255,255,0.1)]" />
+             )}
+             {i === adjustedToday && <View key="indicator" className="absolute w-full h-full rounded-full border border-[#8B5CF6]/30" />}
           </View>
-        </TouchableOpacity>
+        </View>
       ))}
     </View>
   );
@@ -116,6 +109,72 @@ function WeeklyCalendar() {
 
 
 export default function Dashboard() {
+  const [stats, setStats] = React.useState({
+    tonnage: 0,
+    activeDays: [] as number[],
+    regularity: 0,
+    loading: true
+  });
+
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchStats();
+    }, [])
+  );
+
+  async function fetchStats() {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const now = new Date();
+      const firstDayOfWeek = new Date(now.setDate(now.getDate() - now.getDay() + (now.getDay() === 0 ? -6 : 1)));
+      firstDayOfWeek.setHours(0, 0, 0, 0);
+
+      // 1. Fetch sessions for the week
+      const { data: sessions } = await supabase
+        .from('workout_sessions')
+        .select(`
+          id,
+          start_time,
+          session_exercises (
+            sets (weight, reps)
+          )
+        `)
+        .eq('user_id', user.id)
+        .gte('start_time', firstDayOfWeek.toISOString());
+
+      if (sessions) {
+        let totalTonnage = 0;
+        const activeDaysSet = new Set<number>();
+
+        sessions.forEach(session => {
+          const date = new Date(session.start_time);
+          const dayIndex = date.getDay() === 0 ? 6 : date.getDay() - 1;
+          activeDaysSet.add(dayIndex);
+
+          session.session_exercises.forEach((se: any) => {
+            se.sets.forEach((s: any) => {
+              totalTonnage += (s.weight || 0) * (s.reps || 0);
+            });
+          });
+        });
+
+        const activeDays = Array.from(activeDaysSet);
+        const regularity = Math.min(Math.round((activeDays.length / 4) * 100), 100); // Goal: 4 sessions/week
+
+        setStats({
+          tonnage: totalTonnage,
+          activeDays,
+          regularity,
+          loading: false
+        });
+      }
+    } catch (e) {
+      console.error('Fetch Stats Error:', e);
+    }
+  }
+
   return (
     <View className="flex-1 bg-black">
       <BackgroundBlobs />
@@ -135,9 +194,20 @@ export default function Dashboard() {
           
           <Animated.View entering={FadeInDown.delay(100).springify().damping(20).mass(0.8)} className="items-center mt-6">
              {/* Weekly Calendar Tracker */}
-             <WeeklyCalendar />
-             {/* Ring is slightly smaller to fit better horizontally */}
-             <CircularProgress progress={87} size={180} strokeWidth={10} />
+             <WeeklyCalendar activeDays={stats.activeDays} />
+             {/* Ring shows Regularity */}
+             <CircularProgress progress={stats.loading ? 0 : stats.regularity} size={180} strokeWidth={10} />
+             
+             <View className="flex-row mt-6 gap-4">
+                <View className="bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.05)] px-6 py-3 rounded-2xl items-center">
+                  <Text className="text-[rgba(255,255,255,0.4)] text-[9px] font-bold uppercase tracking-wider mb-1">Volume Hebdo</Text>
+                  <Text className="text-white text-xl font-black">{stats.tonnage.toLocaleString()} <Text className="text-sm font-normal text-[rgba(255,255,255,0.5)]">kg</Text></Text>
+                </View>
+                <View className="bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.05)] px-6 py-3 rounded-2xl items-center">
+                  <Text className="text-[rgba(255,255,255,0.4)] text-[9px] font-bold uppercase tracking-wider mb-1">Séances</Text>
+                  <Text className="text-white text-xl font-black">{stats.activeDays.length} <Text className="text-sm font-normal text-[rgba(255,255,255,0.5)]">/ 4</Text></Text>
+                </View>
+             </View>
           </Animated.View>
 
           <View className="mt-8">

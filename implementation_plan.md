@@ -11,18 +11,25 @@ We're building a fitness tracking app that replaces legacy apps with a futuristi
 - **Graphics Engine**: React Native Skia (for Liquid Glass effects & Shaders)
 - **Icons**: Lucide React Native
 
-## 🏋️‍♂️ Gestion des Séances (Améliorations)
-L'objectif est de permettre à l'utilisateur de voir ses performances passées et de gagner du temps en relançant des séances types.
-
+## 🏋️‍♂️ Gestion des Séances (Finalisation)
 ### [MODIFY] [workout.tsx](file:///Volumes/DD/strenght-stats/app/(tabs)/workout.tsx)
-- **Historique** : Ajouter une section "Séances précédentes" sous le bouton "Démarrer".
-- **Relaunch** : Ajouter un bouton "Recommencer" sur chaque séance passée.
-- **Logique** : 
-    - Fetch les 5 dernières sessions de l'utilisateur.
-    - Implémenter `relaunchWorkout(sessionId)` qui récupère les exos et les charges de la session `sessionId` pour les injecter dans l'état actif.
+- **Loader Histoire**: Afficher un `ActivityIndicator` pendant `fetchHistory`.
+- **Détails Séance**: Implémenter la modal "Voir" qui affiche le récap complet (exos, charges) d'une séance passée.
+- **Fiabilité Sauvegarde**: 
+    - Vérifier l'existence du profil utilisateur avant l'insertion.
+    - Ajouter des toasts/alertes plus précis en cas d'erreur de base de données.
 
-## 📊 Dashboard Data Connect
-Relier les anneaux de progression aux données réelles (tonnage total, nombre de séances).
+## 📊 Dashboard Data Sync
+### [MODIFY] [index.tsx](file:///Volumes/DD/strenght-stats/app/(tabs)/index.tsx)
+- **Statistiques Réelles**: 
+    - Remplacer les données "en dur" par des requêtes Supabase.
+    - Calculer le tonnage hebdomadaire (somme des `weight * reps`).
+    - Calculer le taux de complétion (séances terminées vs objectif).
+- **Réseau de Graphes**: Préparer le terrain pour des graphiques de progression de force.
+
+## ⚙️ CI/CD & Git
+- [x] Push initial sur GitHub.
+- [ ] Branche `feat/dashboard-sync` pour les travaux en cours.
 
 ## User Review Required
 > [!IMPORTANT]
