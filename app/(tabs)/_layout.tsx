@@ -1,5 +1,5 @@
 import { Tabs } from 'expo-router';
-import { LucideZap, LucideDumbbell, LucideUser } from 'lucide-react-native';
+import { LucideZap, LucideDumbbell, LucideUser, LucideBarChart2 } from 'lucide-react-native';
 
 export default function TabLayout() {
   return (
@@ -27,6 +27,13 @@ export default function TabLayout() {
         options={{
           title: 'Séance',
           tabBarIcon: ({ color }) => <LucideDumbbell color={color} size={24} />,
+        }}
+      />
+      <Tabs.Screen
+        name="stats"
+        options={{
+          title: 'Stats',
+          tabBarIcon: ({ color }) => <LucideBarChart2 color={color} size={24} />,
         }}
       />
       <Tabs.Screen

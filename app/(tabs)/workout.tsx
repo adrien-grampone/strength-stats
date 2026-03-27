@@ -14,6 +14,7 @@ import {
   Share,
   Alert
 } from 'react-native';
+import { useLocalSearchParams } from 'expo-router';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { 
   LucidePlus, 
@@ -55,6 +56,7 @@ const MUSCLE_GROUPS = ['Tous', 'Pectoraux', 'Dos', 'Jambes', 'Épaules', 'Bras',
 
 export default function WorkoutScreen() {
   const insets = useSafeAreaInsets();
+  const params = useLocalSearchParams();
   const [isWorkoutActive, setIsWorkoutActive] = useState(false);
   const [exercises, setExercises] = useState<WorkoutExercise[]>([]);
   const [showExerciseModal, setShowExerciseModal] = useState(false);
@@ -84,6 +86,44 @@ export default function WorkoutScreen() {
       fetchHistory();
     }
   }, [isWorkoutActive]);
+
+  // React to navigation params from Dashboard - runs on every focus
+  useEffect(() => {
+    const action = params.action as string;
+    if (!action) return;
+    
+    if (action === 'start') {
+      // Start a fresh empty workout
+      setExercises([]);
+      setIsWorkoutActive(true);
+    } else if (action === 'ai_start') {
+      // Start a workout with AI-suggested exercises pre-filled
+      try {
+        const preFilled = JSON.parse(params.exercises as string || '[]');
+        const workoutExercises: WorkoutExercise[] = preFilled.map((ex: any) => ({
+          id: Math.random().toString(36).substr(2, 9),
+          exercise: ex,
+          sets: [{ id: Math.random().toString(36).substr(2, 9), reps: '10', weight: '0' }]
+        }));
+        setExercises(workoutExercises);
+        setIsWorkoutActive(true);
+      } catch (e) {
+        setExercises([]);
+        setIsWorkoutActive(true);
+      }
+    } else if (action === 'exercises') {
+      // Open the exercise library modal directly
+      if (!isWorkoutActive) {
+        setExercises([]);
+        setIsWorkoutActive(true);
+      }
+      setTimeout(() => setShowExerciseModal(true), 300);
+    } else if (action === 'history') {
+      // Make sure we are on the history view
+      setIsWorkoutActive(false);
+      fetchHistory();
+    }
+  }, [params.action, params.t]);
 
   async function deleteSession(sessionId: string) {
     Alert.alert(
